@@ -24,4 +24,4 @@ jobs:
           python -m compileall -q .
           ruff check .
       - name: Testleri çalıştır
-        run: pytest -q
+        run: python -m pytest -q
