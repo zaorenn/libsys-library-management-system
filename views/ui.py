@@ -48,6 +48,8 @@ def _download_cover(url):
         content_length = int(response.headers.get("Content-Length", 0) or 0)
         if content_length > MAX_IMAGE_BYTES:
             raise ValueError("Kapak görseli çok büyük.")
+        # Content-Length eksik veya hatalı olsa bile sınırlı okuma, uzak bir
+        # görselin masaüstü uygulamasının belleğini tüketmesini engeller.
         raw_data = response.read(MAX_IMAGE_BYTES + 1)
     if len(raw_data) > MAX_IMAGE_BYTES:
         raise ValueError("Kapak görseli çok büyük.")
@@ -59,6 +61,8 @@ def _download_cover(url):
 def _cache_cover(url, image):
     with IMAGE_LOCK:
         if len(IMAGE_CACHE) >= MAX_CACHED_IMAGES:
+            # Sınırlı FIFO benzeri tahliye, 80+ yüksek çözünürlüklü kapağın
+            # bellekte süresiz birikmesini önler; kilit arka plan thread'lerini korur.
             IMAGE_CACHE.pop(next(iter(IMAGE_CACHE)))
         IMAGE_CACHE[url] = image
 

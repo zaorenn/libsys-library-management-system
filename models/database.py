@@ -47,6 +47,8 @@ def db_session(*, immediate: bool = False) -> Iterator[sqlite3.Connection]:
     connection = get_connection()
     try:
         if immediate:
+            # Yazma kilidini ilk SELECT'ten önce ayırır. Böylece iki ödünç
+            # işlemi aynı "son kopyayı" eşzamanlı olarak uygun göremez.
             connection.execute("BEGIN IMMEDIATE")
         yield connection
         connection.commit()

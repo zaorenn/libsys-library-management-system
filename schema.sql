@@ -123,6 +123,7 @@ DROP TRIGGER IF EXISTS before_borrow_insert;
 DROP TRIGGER IF EXISTS after_borrow_insert;
 DROP TRIGGER IF EXISTS after_borrow_update_return;
 
+-- Controller atlanarak doğrudan SQL çalıştırılsa bile stoksuz ödüncü reddeder.
 CREATE TRIGGER before_borrow_insert
 BEFORE INSERT ON borrows
 BEGIN
@@ -135,6 +136,7 @@ BEGIN
     END;
 END;
 
+-- Ödünç kaydı ve stok düşümü aynı transaction içinde atomik olarak gerçekleşir.
 CREATE TRIGGER after_borrow_insert
 AFTER INSERT ON borrows
 BEGIN
@@ -149,6 +151,8 @@ BEGIN
          'Kitap ödünç verildi. Üye ID: ' || COALESCE(NEW.member_id, 'silinmiş'));
 END;
 
+-- WHEN koşulu ikinci bir iade güncellemesinin stoğu tekrar artırmasını engeller;
+-- gecikme ücreti yalnız ilk iadede, geciken gün başına 5 TL olarak hesaplanır.
 CREATE TRIGGER after_borrow_update_return
 AFTER UPDATE OF actual_return_date ON borrows
 WHEN NEW.actual_return_date IS NOT NULL AND OLD.actual_return_date IS NULL

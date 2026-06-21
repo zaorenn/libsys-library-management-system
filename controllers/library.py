@@ -141,6 +141,8 @@ class BookController:
 
     @staticmethod
     def delete_book(book_id):
+        """Kitabı fiziksel silmeden arşivleyerek ödünç ve denetim geçmişini korur."""
+
         try:
             with db_session(immediate=True) as connection:
                 row = connection.execute(
@@ -310,6 +312,8 @@ class MemberController:
 
     @staticmethod
     def delete_member(member_id):
+        """Geçmiş ödünç ilişkilerini bozmamak için üyeyi fiziksel olarak silmez."""
+
         with db_session(immediate=True) as connection:
             row = connection.execute(
                 "SELECT name FROM members WHERE id = ? AND is_active = 1", (member_id,)
@@ -339,6 +343,8 @@ class BorrowController:
                 return False, f"Ödünç süresi 1-{MAX_BORROW_DAYS} gün arasında olmalıdır."
             due_date = (dt.date.today() + dt.timedelta(days=loan_days)).isoformat()
 
+            # Üye/limit/stok kontrolleri ile INSERT aynı ayrılmış yazma kilidi
+            # içinde kalır; stok değişimini aynı transaction'daki trigger yapar.
             with db_session(immediate=True) as connection:
                 member = connection.execute(
                     """

@@ -178,6 +178,8 @@ def _open_library_search(query: str, limit: int) -> list[OnlineBook]:
 def _cached_search(normalized_query: str, limit: int) -> tuple[OnlineBook, ...]:
     results: list[OnlineBook] = []
     provider_errors: list[Exception] = []
+    # Open Library ana kaynaktır. Yeterli sonuç üretmez veya hata verirse
+    # Google Books aynı normalize modele dönüştürülerek eksikleri tamamlar.
     for provider in (_open_library_search, _google_search):
         if len(results) >= limit:
             break
@@ -188,6 +190,8 @@ def _cached_search(normalized_query: str, limit: int) -> tuple[OnlineBook, ...]:
 
     unique: list[OnlineBook] = []
     seen: set[str] = set()
+    # Sağlayıcılar aynı eseri farklı metadata ile döndürebildiği için ISBN,
+    # kullanıcıya ve veritabanına giden tekilleştirme anahtarıdır.
     for book in results:
         if book.isbn in seen:
             continue
