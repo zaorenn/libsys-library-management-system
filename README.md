@@ -2,7 +2,7 @@
 
 # ◈ LibSys
 
-### Hikâyeler burada ışık bulur.
+### Kütüphane yönetim sistemi.
 
 Python, SQLite ve CustomTkinter ile geliştirilen; üye deneyimi ile yönetim operasyonlarını ayrı arayüzlerde birleştiren modern kütüphane yönetim sistemi.
 
