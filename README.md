@@ -17,10 +17,52 @@ Python, SQLite ve CustomTkinter ile geliştirilen; üye deneyimi ile yönetim op
 
 LibSys, Faz 2 **Proje 1 – Kütüphane Yönetim Sistemi** için **Python + SQL + GitHub** teknoloji kombinasyonuyla hazırlanmıştır. Uygulama kitap, üye ve ödünç işlemlerinin CRUD akışlarını; güvenli kimlik doğrulamayı, stok/ceza otomasyonunu ve açıklayıcı testleri tek projede sunar.
 
+**GitHub deposu:** [github.com/zaorenn/libsys-library-management-system](https://github.com/zaorenn/libsys-library-management-system)
+
+**Geliştirme geçmişi:** [Commit geçmişini görüntüle](https://github.com/zaorenn/libsys-library-management-system/commits/main/)
+
 İki farklı masaüstü deneyimi vardır:
 
 - **Üye uygulaması:** 80 kapaklı ve özetli başlangıç kataloğu, anlık arama, kitap detayları, ödünç/iade, bildirimler, çevrimiçi kitap isteği, profil talebi ve tema seçimi.
 - **Yönetim stüdyosu:** canlı gösterge paneli, kitap/üye CRUD, üyelik onayı, tüm ödünç geçmişi, manuel iade, Open Library + Google Books entegrasyonu, talep yönetimi ve veri bakım araçları.
+
+## Proje Geliştirme Süreci
+
+Projeyi birbirini izleyen, doğrulanabilir aşamalar hâlinde geliştirdim:
+
+1. **Planlama – 20 Haziran 2026:** Önce Faz 2 gereksinimlerini kitap, üye ve ödünç alma ana modüllerine ayırdım. Üye ve yönetici rollerini, ekran akışlarını, CRUD işlemlerini ve katmanlı klasör yapısını belirledim.
+2. **Veritabanı tasarımı – 20 Haziran 2026:** SQLite üzerinde `admins`, `members`, `books`, `borrows`, istek, bildirim ve denetim tablolarını oluşturdum. Primary key/foreign key ilişkilerini, benzersiz alanları, `CHECK` kısıtlarını, indeksleri ve stok trigger'larını `schema.sql` içinde tanımladım; JOIN/GROUP BY raporlarını `reports.sql` dosyasına ekledim.
+3. **İş mantığı ve CRUD – 20 Haziran 2026:** Kimlik doğrulama, kitap ve üye yönetimi, ödünç/iade, profil talebi ve bildirim işlemlerini controller katmanında geliştirdim. Kullanıcı girdilerini merkezi doğrulayıcılardan geçirip SQL sorgularını parametreli çalıştırdım; eşzamanlı ödünç işlemlerinde transaction kullandım.
+4. **Kullanıcı arayüzü – 20–21 Haziran 2026:** CustomTkinter ile üye uygulamasını ve yönetim stüdyosunu ayrı giriş noktaları olarak hazırladım. Daha sonra projeyi LibSys adı altında birleştirip koyu ve açık Neutral Glass temalarını, katalog kartlarını, ayrıntı pencerelerini ve uyarlanabilir kaydırmayı tamamladım.
+5. **API entegrasyonu ve katalog – 21 Haziran 2026:** 80 kitaplık başlangıç kataloğuna geçerli ISBN, Türkçe açıklama ve kapak ekledim. Üye ve yönetici ekranlarının aynı servisi kullanması için Open Library ana kaynak, Google Books yedek kaynak olacak biçimde ortak ve önbellekli bir arama katmanı geliştirdim.
+6. **Test ve teslim hazırlığı – 21 Haziran 2026:** SQLite iş kurallarını, CRUD akışlarını, demo hesapları, API yedeklemesini, ISBN/kapak bütünlüğünü ve fare tekerleği davranışını pytest ile sınadım. Ruff, derleme kontrolü, GUI duman testi ve GitHub Actions kalite kapısını çalıştırıp README ile test planını son hâline getirdim.
+
+## Karşılaştığım Zorluklar
+
+- **Öğrendiğim bilgileri projeye aktarmak:** Arayüz, iş kuralları ve SQL kodu başlangıçta birbirine kolayca karışabildiği için kodu `views`, `controllers`, `models` ve `services` katmanlarına ayırdım. Böylece bir ekrandaki değişikliğin veritabanı kurallarını bozmasını önledim.
+- **SQLite trigger'ları ve stok hesabı:** Ödünç verildiğinde stoğun tam bir kez azalması, iade edildiğinde tam bir kez artması ve gecikme cezasının doğru hesaplanması gerekiyordu. Bu kuralları controller kontrolüne ek olarak veritabanı trigger'larıyla güvenceye aldım.
+- **Eşzamanlı ödünç işlemleri:** İki işlemin aynı son kopyayı aynı anda almaması için normal transaction yerine `BEGIN IMMEDIATE`, busy timeout ve atomik stok kontrolleri kullandım.
+- **Çevrimiçi kitap servisleri:** Open Library ile Google Books farklı alan adları, ISBN listeleri ve kapak biçimleri döndürüyor; ayrıca kota ve bağlantı hataları oluşabiliyor. Sonuçları ortak bir modele dönüştürdüm, Open Library sonucunda gerçek kapak kimliği aradım ve ilk servis çalışmazsa diğerine geçen yedekleme akışı kurdum.
+- **ISBN doğrulaması:** Dış servislerin bazı sonuçlarında hatalı veya eksik ISBN bulunduğu için yalnız biçim kontrolü yapmak yeterli olmadı. ISBN-10 ve ISBN-13 checksum hesaplarını merkezi validasyon katmanına ekledim.
+- **Arayüz düzeni ve görseller:** Farklı pencere genişliklerinde kartların taşmaması, kapakların arayüzü dondurmaması ve fare tekerleğinin iç içe widget'larda çalışması için dinamik sütun düzeni, arka plan thread'leri, sınırlı görsel önbelleği ve özel kaydırma yönlendirmesi kullandım.
+- **Veri geçmişini korumak:** Fiziksel silme, geçmiş ödünç ve denetim kayıtlarını anlamsızlaştırdığı için kitap ve üyelerde `is_active` tabanlı arşivleme uyguladım; aktif ödüncü olan kayıtların arşivlenmesini ayrıca engelledim.
+
+## Proje Sonunda Öğrendiklerim
+
+- Python'da modüler bir masaüstü uygulamasını arayüz, controller, model, servis ve validasyon katmanlarına ayırmayı; ortak davranışları tekrar etmeden kullanmayı öğrendim.
+- SQL tarafında tablo ilişkileri, foreign key davranışları, indeksler, `CHECK` kısıtları, trigger'lar ve JOIN/GROUP BY raporlarının birlikte nasıl tasarlandığını uyguladım.
+- Transaction sınırlarının ve `BEGIN IMMEDIATE` gibi kilitleme tercihlerinin yalnız performansı değil veri doğruluğunu da etkilediğini gördüm.
+- Geçici test veritabanları, mock API cevapları ve GUI duman testleriyle hem başarılı yolları hem hata durumlarını sınamayı öğrendim.
+- Hata ayıklarken doğrulama mesajları, SQLite bütünlük kontrolü, denetim günlükleri, uzak API durum kodları ve küçük tekrar üretilebilir testlerden yararlandım.
+- Git ile değişiklikleri küçük ve anlamlı commit'lere ayırmayı, uzak değişiklikleri rebase ile korumayı ve GitHub Actions sonucunu teslimden önce kontrol etmeyi deneyimledim.
+
+## Python, SQL ve GitHub'ın Projedeki Rolü
+
+| Teknoloji | Projedeki rolü |
+|---|---|
+| **Python** | CustomTkinter arayüzlerini, kimlik doğrulamayı, CRUD ve ödünç iş kurallarını, validasyonu, çevrimiçi kitap servisini ve otomatik testleri çalıştırır. |
+| **SQL / SQLite** | Kalıcı veriyi saklar; tablolar, ilişkiler, kısıtlar, indeksler, trigger'lar ve transaction'lar aracılığıyla stok ile geçmiş bütünlüğünü korur. `reports.sql` içindeki JOIN/GROUP BY sorguları yönetim raporlarını gösterir. |
+| **Git ve GitHub** | Kaynak kodun sürüm kontrolünü ve uzak yedeğini sağlar. Anlamlı commit geçmişi geliştirme sürecini gösterir; herkese açık depo teslim bağlantısını, GitHub Actions ise her push'ta otomatik test ve kod kalite kontrolünü sağlar. |
 
 ## Neden farklı?
 
